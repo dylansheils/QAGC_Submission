@@ -1,24 +1,4 @@
-# Quantum Algorithm Grand Challenge
-
-# Table of Contents
-1. [Overview of Quantum Algorithm Grand Challenge](#Overview)
-2. [Introduction](#Introduction)
-    - [Background](#Introduction_1)
-    - [Model description](#Introduction_2)
-    - [NISQ device simulation](#Introduction_3)
-3. [Problem description](#problem)
-    - [Fermi-Hubbard Model](#problem_1)
-    - [Problem statement](#problem_2)
-4. [Evaluation Criteria](#EvaluationCriteria)
-5. [Implementation](#Implementation)
-6. [How to submit](#Submission)
-7. [Description of the Provided Program](#program)
-8. [Available Packages](#Packages)
-9. [Notes and Prohibited Items](#forbidden)
-    - [Notes on Evaluation](#forbidden_1)
-    - [Prohibited Items](#forbidden_2)
-10. [Copyright](#Copyright)
-
+# Quantum Algorithm Grand Challenge Submission
 
 # Overview of Quantum Algorithm Grand Challenge <a id="Overview"></a>
 Quantum Algorithm Grand Challenge (QAGC) is a global online contest for students, researchers, and others who learn quantum computation and quantum chemistry around the world.
@@ -27,24 +7,11 @@ From May 3 to July 31, 2023, participants will solve a problem that focus on the
 
 QAGC web-site:  https://www.qagc.org/
 
-## Awards
-- 1st Place - $10,000 + presentation at IEEE Quantum week
-- 2nd Place - $5,000 + presentation at IEEE Quantum week
-- 3rd Place - $3,000 + presentation at IEEE Quantum week
-- 4th Place - presentation at IEEE Quantum week
-
-The top four (teams) will present their algorithms at the workshop hosted by QunaSys at IEEE Quantum Week 2023. It will be held as an in-person event with virtual participation in Bellevue, Washington, USA at the Hyatt Regency Bellevue on Seattle’s Eastside on Sep 17–22, 2023. 
-
-For more information, please visit the IEEE website https://qce.quantum.ieee.org/2023.
-
-
 # Introduction <a id="Introduction"></a>
 
 As Quantum Computing technology evolves with qubit capacity regularly duplicating, we need to understand how to make better use of Noisy Intermediate-Scale Quantum (NISQ) devices and create algorithms that will enable industrial applications. To identify how to shape the direction for promoting the NISQ algorithm for practical industrial application, it is important to clarify the evaluation criteria to compare the algorithm's performance and define the key factors to take into account. 
 
 We hold a global online contest, the QAGC, to explore practical uses for NISQ devices, visualize bottlenecks in NISQ device utilization, and create a metric for benchmarking the NISQ algorithms.
-
-
 
 ## Background <a id="Introduction_1"></a>
 
@@ -194,112 +161,6 @@ Participants can calculate the score by running `evaluator.py`.
 
 Since we are dealing with a large qubits system such as 8 qubits, running evaluator.py using the code in example.py takes *6-7* hours for a single execution.
 
-# How to submit <a id="Submission"></a>
-
-The participants's code will be submitted as an issue using this template summarizing your project. Specifically, this issue should contain:
-
-1. Team name: Your team's name
-2. Team members: Listup all members name
-3. Project Description: A brief description of your project (1-2 paragraphs).
-4. Presentation: A link of presentation of your team’s hackathon project (e.g., video, jupyter notebook, slideshow, etc.).
-5. Source code: A link to the final source code for your team's hackathon project (e.g., a GitHub repo).
-
-The score will be calculated by the management side, and the rankings will be determined and published in the [QAGC web site](https://www.qagc.org/).
-
-- Participants can submit their work as many times as they want during the period of QAGC.
-
-- Participants can form teams with members.
-
-- Submitted code is evaluated once a week and rankings are presented along with scores.
-
-Here are some points to note when submitting.
-
-- The participants's code can be viewed by other participants.
-
-- If you do not want it to be public, you can send the code directly to the management qagc@qunasys.com. Even in that case, the score will be calculated and the ranking will be determined, but the code will not be made public.
-
-# Description of the Provided Program <a id="program"></a>
-
-We have provided some codes for QAGC. The descriptions of each code are as follows.
-
-  - `README.md`:
-  
-    This is the explanation of the QAGC.
-
-  - `technical_details.md`:
-
-    The details about the NISQ device simulation and the expected execution time.
-
-  - `tutorials`:
-
-    This contains some tutorials.
-
-  - `hamiltonian`:
-  
-    The Hamiltonian to be used in the problem is stored in this folder in `.data` format.
-
-The code in `problem` is structured as follows
-
-  - `answer.py`:
-
-    This is the file for implementing the participants's code. See [How to Submit an Algorithm](#evaluation0) for details.
-
-  - `evaluator.py`:
-    
-    This is the code to evaluate the answer and calculate the score.
-  - `examples.py`:
-    
-    This is an example of an answer prepared by QunaSys.
-
-The code in `utils` is structured as follows.
-
-  - `challenge_2023.py`:
-    
-    This contains the sampling function used in QAGC. 
-
-  - `challenge_transpiler.py`:
-    
-    This is the code that transpiles the input circuit into both superconducting and ion trap types.
-
-  - `sampling_estimator.py`:
-    
-    This contains the sampling function used in QAGC.
-
-
-# Available Packages <a id="Packages"></a>
-
-The following Python software library can be used in QAGC.
-
-- [QURI Parts](https://quri-parts.qunasys.com/)
-
-- [Qiskit](https://qiskit.org/)
-
-- [Cirq](https://quantumai.google/cirq)
-
-**QURI Parts** is an open-source quantum computing library that is modular, efficient, and platform-independent, developed by QunaSys.
-
-- Platform-independent: Run one algorithm code on various simulators and platforms.
-
-- Modularity and Scalability: Combine parts to create your own algorithm, and easily create and use your own parts.
-
-- High-speed: Classical processing and simulator calls associated with quantum computing are efficient. It is the fastest platform-independent library using Qulacs.
-
-- Open source: Released under Apache License 2.0.
-
-All codes we have prepared are written by using **QURI Parts**.
-
-In QAGC, it is also possible to use **Qiskit** as an input of the sampling function. When you input a Qiskit circuit or operator, it is automatically converted into QURI Parts one and sampled. We have provided an example of how to use the sampler and sampling estimator with qiskit circuits and operators in `tutorials.qiskit_sampling.ipynb`.
-
-In QURI Parts, there are codes to convert **Cirq** circuits and operators to **QURI Parts**. When implementing with **Cirq**, you can use these codes to use the provided sampling function with cirq circuits and operators.
-
-```python
-from quri_parts.cirq.circuit import circuit_from_cirq
-from quri_parts.cirq.operator import operator_from_cirq_op
-
-quri_parts_circuit = circuit_from_cirq(cirq_circuit)
-quri_parts_operator = operator_from_cirq_op(cirq_operator)
-```
-
 ## Version
 
 The version of the main package used in the challenge for participants will be fixed as follows:
@@ -313,43 +174,9 @@ qulacs == 0.5.6
 numpy == 1.23.5
 ```
 
-If you use a version other than the specified one, or use other packages, please specify the name of that package and its version in the issue to be registered when submitting.
-
-# Notes and Prohibited Items <a id="forbidden"></a>
-
 ## Notes on Evaluation <a id="forbidden_1"></a>
 
 The validity of the final answer will be judged by the judge based on whether it falls under the prohibited answers below. If it is deemed valid, a score will be calculated. The final decision on the validity of the answer and the score will be made by the operator.
-
-## Prohibited Items <a id="forbidden_2"></a>
-
-- Answers that do not essentially use quantum computers.
-  
-  Unfortunately, the fastest and most accurate way to solve the problem may be to use only classical computers. Therefore, in QAGC, we prohibit answers that do not essentially use quantum computers, such as the following examples.
-
-  - Example 1: Pushing the exponentially time-consuming parts onto classical computation
-    - Calculate the wave function classically and only calculate the final expectation value with the quantum algorithm.
-  - Example 2: Not using the quantum algorithm at all.
-
-- Algorithms that use explicitly obtained values from classical computation.
-
-  Depending on the Hamiltonian of the problem, exact values may be obtained by classical computation (diagonalization of the Hamiltonian, etc.). In this case, you cannot use this value to construct the algorithm.
-
-  - For example, an algorithm that prepares an exact value in advance and measures it multiple times to adopt the value closest to it.
-
-- The implemented algorithm must be scalable with respect to the number of qubits.
-  
-  - For example, if you consider to diagonalizing truncated Hamiltonian, the truncation must be selected to be scalable.
-
-- Hard-coded *good* parameter sets.
-
-    - The selection of initial parameters must be done in a scalable manner. You cannot hard-code a *good* parameter set into the answer code.
-
-- Answers that output values that are not calculated using the algorithm.
-
-- Modifying code that is not allowed to be modified.
-
-  - The only codes that participants can modify are those in the `problem` folder. Do not modify the codes in the utils folder.
 
 # Copyright <a id="Copyright"></a>
 
