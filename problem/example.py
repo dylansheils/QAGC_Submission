@@ -7,6 +7,7 @@ from openfermion.utils import load_operator
 
 from quri_parts.algo.ansatz import HardwareEfficientReal
 from quri_parts.algo.optimizer import Adam, OptimizerStatus
+from quri_parts.circuit import LinearMappedUnboundParametricQuantumCircuit
 from quri_parts.core.estimator.gradient import parameter_shift_gradient_estimates
 from quri_parts.core.measurement import bitwise_commuting_pauli_measurement
 from quri_parts.core.sampling.shots_allocator import (
@@ -16,7 +17,7 @@ from quri_parts.core.state import ParametricCircuitQuantumState, ComputationalBa
 from quri_parts.openfermion.operator import operator_from_openfermion_op
 
 sys.path.append("../")
-from utils.challenge_2023 import ChallengeSampling, QuantumCircuitTimeExceededError
+from utils.challenge_2023 import ChallengeSampling, TimeExceededError
 
 
 """
@@ -48,8 +49,8 @@ def vqe(hamiltonian, parametric_state, estimator, init_params, optimizer):
             opt_state = optimizer.step(opt_state, c_fn, g_fn)
             print(f"iteration {opt_state.niter}")
             print(opt_state.cost)
-        except QuantumCircuitTimeExceededError:
-            print("Reached the limit of shots")
+        except TimeExceededError as e:
+            print(str(e))
             return opt_state
 
         if opt_state.status == OptimizerStatus.FAILED:
@@ -72,8 +73,8 @@ class RunAlgorithm:
         return energy_final, qc_time_final
 
     def get_result(self) -> Any:
-        #n_site = 3
-        n_qubits = 4
+        n_site = 4
+        n_qubits = 2 * n_site
         ham = load_operator(
             file_name=f"{n_qubits}_qubits_H",
             data_directory="../hamiltonian",
@@ -82,16 +83,18 @@ class RunAlgorithm:
         jw_hamiltonian = jordan_wigner(ham)
         hamiltonian = operator_from_openfermion_op(jw_hamiltonian)
 
+        # make hf + HEreal ansatz
         hf_gates = ComputationalBasisState(n_qubits, bits=0b00001111).circuit.gates
+        hf_circuit = LinearMappedUnboundParametricQuantumCircuit(n_qubits).combine(hf_gates)
         hw_ansatz = HardwareEfficientReal(qubit_count=n_qubits, reps=1)
-        hw_hf = hw_ansatz.combine(hf_gates)
+        hf_circuit.extend(hw_ansatz)
 
-        parametric_state = ParametricCircuitQuantumState(n_qubits, hw_hf)
+        parametric_state = ParametricCircuitQuantumState(n_qubits, hf_circuit)
 
-        hardware_type = "sc"
+        hardware_type = "it"
         shots_allocator = create_equipartition_shots_allocator()
         measurement_factory = bitwise_commuting_pauli_measurement
-        n_shots = 10**3
+        n_shots = 10**4
 
         sampling_estimator = (
             challenge_sampling.create_concurrent_parametric_sampling_estimator(
