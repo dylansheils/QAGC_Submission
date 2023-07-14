@@ -146,7 +146,7 @@ def optimization_sweep(hw_oracle, hamiltonian, num_qubits, depth):
     while True:
         try:
             #for i in range(0):
-            optimizer = NFT(randomize=True)#Adam(ftol=10e-5)
+            optimizer = Adam(ftol=10e-5)
             opt_state = optimizer.get_init_state(parameters_per_block[i])
             hw_hf = SU4_Ansatz(num_qubits, depth, parameters_per_block, i)
             hw_hf = hw_hf.combine(hw_oracle)
