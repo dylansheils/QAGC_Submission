@@ -5,9 +5,10 @@ import numpy as np
 from openfermion.transforms import jordan_wigner
 from openfermion.utils import load_operator
 import quri_parts
+import math
 from quri_parts.qiskit.circuit import circuit_from_qiskit
 from quri_parts.algo.ansatz import SymmetryPreservingReal, HardwareEfficient
-from quri_parts.algo.optimizer import Adam, NFT, OptimizerStatus
+from quri_parts.algo.optimizer import NFT, OptimizerStatus
 from quri_parts.circuit import UnboundParametricQuantumCircuit
 from quri_parts.core.estimator.gradient import parameter_shift_gradient_estimates
 from quri_parts.core.measurement import bitwise_commuting_pauli_measurement
@@ -60,38 +61,31 @@ def SU4_Ansatz(num_qubits, depth, params, optimizing = 0):
     before = UnboundParametricQuantumCircuit(num_qubits)
     after = UnboundParametricQuantumCircuit(num_qubits)
     qc = QuantumCircuit(num_qubits)
+    iswap = qiskit.circuit.library.standard_gates.iswap.iSwapGate()
+    iswap = iswap.power(0.5)
     layer_num = 0
     for layer in ranges:
         for qubit, idx in zip(layer[::2], range(0, len(layer), 2)):
             if(not flagged and iteration != optimizing and qubit >= 0 and qubit < num_qubits):
-                if((layer_num + idx) % 3 == 0):
-                    qc.rx(params[iteration][idx], qubit)
-                if((layer_num + idx) % 3 == 1):
-                    qc.rz(params[iteration][idx], qubit)
-                if((layer_num + idx) % 3 == 2):
-                    qc.ry(params[iteration][idx], qubit)
-                qc.cnot(qubit, qubit+1)
-                if((idx) % 3 == 0):
-                    qc.rx(params[iteration][idx], qubit+1)
-                if((idx) % 3 == 1):
-                    qc.rz(params[iteration][idx], qubit+1)
-                if((idx) % 3 == 2):
-                    qc.ry(params[iteration][idx], qubit+1)
+                #qc.cnot(qubit, qubit+1)
+                qc.append(iswap, [qubit, qubit+1])
+                qc.rx(params[iteration][idx], qubit)
+                #qc.rz(params[iteration][idx], qubit)
+                qc.rz(params[iteration][idx], qubit)
+                qc.append(iswap, [qubit, qubit+1])
+                qc.rx(params[iteration][idx], qubit+1)
+                qc.rz(params[iteration][idx], qubit+1)
+                qc.append(iswap, [qubit, qubit+1])
+                #qc.rz(params[iteration][idx], qubit+1)
             if(qubit >= 0 and qubit < num_qubits): #iteration == optimizing and 
                 before = before.combine(circuit_from_qiskit(qiskit_circuit = qc).gates)
                 qc = QuantumCircuit(num_qubits)
-                if((layer_num + idx) % 3 == 0):
-                    before.add_ParametricRX_gate(qubit)
-                if((layer_num + idx) % 3 == 1):
-                    before.add_ParametricRZ_gate(qubit)
-                if((layer_num + idx) % 3 == 2):
-                    before.add_ParametricRY_gate(qubit)
-                if((idx) % 3 == 0):
-                    before.add_ParametricRX_gate(qubit+1)
-                if((idx) % 3 == 1):
-                    before.add_ParametricRZ_gate(qubit+1)
-                if((idx) % 3 == 2):
-                    before.add_ParametricRY_gate(qubit+1)
+                before.add_ParametricRX_gate(qubit)
+                #before.add_ParametricRZ_gate(qubit)
+                before.add_ParametricRZ_gate(qubit)
+                before.add_ParametricRX_gate(qubit+1)
+                #before.add_ParametricRZ_gate(qubit+1)
+                before.add_ParametricRZ_gate(qubit+1)
                 flagged = True
         iteration += 1
         layer_num += 1
@@ -106,7 +100,7 @@ def optimization_sweep(hw_oracle, hamiltonian, num_qubits, depth):
     hardware_type = "it"
     shots_allocator = create_equipartition_shots_allocator()
     measurement_factory = bitwise_commuting_pauli_measurement
-    n_shots = 2*10**3
+    n_shots = 2.56*10**3
 
     estimator = (
         challenge_sampling.create_concurrent_parametric_sampling_estimator(
@@ -139,14 +133,14 @@ def optimization_sweep(hw_oracle, hamiltonian, num_qubits, depth):
     parameters_per_block = []
     counter = 0
     for layer in ranges:
-        counter += 2*len(layer[::2])
-    parameters_per_block.append(2*np.pi*np.random.rand(counter))
+        counter += 4*len(layer[::2])
+    parameters_per_block.append(2*np.pi*0.001*np.random.rand(counter))
     parameters_per_block2 = parameters_per_block
     iterationTotal = 0
     while True:
         try:
             #for i in range(0):
-            optimizer = Adam(ftol=10e-5)
+            optimizer = NFT(randomize=True, reset_interval=10)#SPSA(0.6283185307179586 / num_qubits) # Expect convergence in ~100 iterations
             opt_state = optimizer.get_init_state(parameters_per_block[i])
             hw_hf = SU4_Ansatz(num_qubits, depth, parameters_per_block, i)
             hw_hf = hw_hf.combine(hw_oracle)
@@ -159,8 +153,7 @@ def optimization_sweep(hw_oracle, hamiltonian, num_qubits, depth):
                 print(f"iteration {iterationTotal+1}")
                 print(opt_state.cost)
                 cost = opt_state.cost
-                if(cost < best_solution[1]):
-                    best_solution = (opt_state.params, opt_state.cost)
+                best_solution = (opt_state.params, opt_state.cost)
                 iterationTotal += 1
             parameters_per_block2[i] = opt_state.params
             parameters_per_block = parameters_per_block2
@@ -194,15 +187,13 @@ class RunAlgorithm:
         # make hf + HEreal ansatz
         hf_gates = ComputationalBasisState(n_qubits, bits=0b00001111).circuit.gates
         hf_circuit = LinearMappedUnboundParametricQuantumCircuit(n_qubits).combine(hf_gates)
-
-        #hw_ansatz1 = HardwareEfficient(qubit_count=n_qubits, reps=n_qubits//2)
-        #hf_circuit.extend(hw_ansatz1)
-
+        hw_ansatz = HardwareEfficient(qubit_count=n_qubits, reps=int(1+math.log2(n_qubits)))
+        hf_circuit.extend(hw_ansatz)
         parametric_state = ParametricCircuitQuantumState(n_qubits, hf_circuit)
         hardware_type = "it"
         shots_allocator = create_equipartition_shots_allocator()
         measurement_factory = bitwise_commuting_pauli_measurement
-        n_shots = 2*10**3
+        n_shots = 2.56*10**3
 
         sampling_estimator = (
             challenge_sampling.create_concurrent_parametric_sampling_estimator(
