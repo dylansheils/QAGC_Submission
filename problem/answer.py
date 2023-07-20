@@ -137,6 +137,7 @@ def optimization_sweep(hw_oracle, hamiltonian, num_qubits, depth):
     parameters_per_block.append(2*np.pi*0.001*np.random.rand(counter))
     parameters_per_block2 = parameters_per_block
     iterationTotal = 0
+    best_cost = 0.0
     while True:
         try:
             #for i in range(0):
@@ -152,16 +153,16 @@ def optimization_sweep(hw_oracle, hamiltonian, num_qubits, depth):
                 opt_state = optimizer.step(opt_state, c_fn, g_fn)
                 print(f"iteration {iterationTotal+1}")
                 print(opt_state.cost)
-                cost = opt_state.cost
-                best_solution = (opt_state.params, opt_state.cost)
+                if(opt_state.cost < best_cost):
+                    best_cost = opt_state.cost
                 iterationTotal += 1
             parameters_per_block2[i] = opt_state.params
             parameters_per_block = parameters_per_block2
         except TimeExceededError:
            print("Reached the limit of shots")
-           return best_solution[1], iterationTotal
+           return best_cost, iterationTotal
 
-    return best_solution[1], iterationTotal
+    return best_cost, iterationTotal
 
 class RunAlgorithm:
     def __init__(self) -> None:
