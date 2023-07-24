@@ -153,8 +153,7 @@ def optimization_sweep(hw_oracle, hamiltonian, num_qubits, depth):
                 opt_state = optimizer.step(opt_state, c_fn, g_fn)
                 print(f"iteration {iterationTotal+1}")
                 print(opt_state.cost)
-                if(opt_state.cost < best_cost):
-                    best_cost = opt_state.cost
+                best_cost = opt_state.cost
                 iterationTotal += 1
             parameters_per_block2[i] = opt_state.params
             parameters_per_block = parameters_per_block2
@@ -191,17 +190,6 @@ class RunAlgorithm:
         hw_ansatz = HardwareEfficient(qubit_count=n_qubits, reps=int(1+math.log2(n_qubits)))
         hf_circuit.extend(hw_ansatz)
         parametric_state = ParametricCircuitQuantumState(n_qubits, hf_circuit)
-        hardware_type = "it"
-        shots_allocator = create_equipartition_shots_allocator()
-        measurement_factory = bitwise_commuting_pauli_measurement
-        n_shots = 2.56*10**3
-
-        sampling_estimator = (
-            challenge_sampling.create_concurrent_parametric_sampling_estimator(
-                n_shots, measurement_factory, shots_allocator, hardware_type
-            )
-        )
-
         cost, iteration = optimization_sweep(hf_gates, hamiltonian, n_qubits, n_qubits)
         print(f"iteration used: {iteration}")
         return cost
