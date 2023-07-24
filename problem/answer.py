@@ -174,7 +174,7 @@ class RunAlgorithm:
         return energy_final, qc_time_final
 
     def get_result(self) -> Any:
-        n_site = 4
+        n_site = 2
         n_qubits = 2 * n_site
         ham = load_operator(
             file_name=f"{n_qubits}_qubits_H",
